@@ -1,19 +1,15 @@
-from dataclasses import dataclass
+import re
 
 import requests
 from bs4 import BeautifulSoup, Tag
 
-
-@dataclass
-class News:
-    title: str
-    url: str
+from scripts.utils import Article
 
 
 class Site:
-    def __init__(self, site: str):
-        self.site = site
-        self.news: list[News] = []
+    def __init__(self, site_name: str):
+        self.site = site_name
+        self.list_news: list[Article] = []
         self.headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0"
         }
@@ -21,20 +17,24 @@ class Site:
     def update_news(self):
         match self.site.lower():
             case "globo":
-                self.scrape_globo()
+                self._scrape_globo()
             case "cnn":
-                self.scrape_cnn()
+                self._scrape_cnn()
             case "veja":
-                self.scrape_veja()
+                self._scrape_veja()
             case "r7":
-                self.scrape_r7()
+                self._scrape_r7()
+            case "livecoins":
+                self._scrape_livecoins()
+            case "poder360":
+                self._scrape_poder360()
 
     def _get_noticias(self, url: str, tag: str = "a"):
         response = requests.get(url, headers=self.headers)
         soup = BeautifulSoup(response.text, "html.parser")
         return soup.find_all(tag)
 
-    def scrape_globo(self):
+    def _scrape_globo(self) -> None:
         noticias = self._get_noticias(
             "https://www.globo.com/",
             tag="a",
@@ -60,9 +60,9 @@ class Site:
                 title = noticia.get_text(strip=True)
                 url = noticia.get("href")
                 if isinstance(url, str):
-                    self.news.append(News(title=title, url=url))
+                    self.list_news.append(Article(title=title, url=url))
 
-    def scrape_cnn(self):
+    def _scrape_cnn(self) -> None:
         noticias = self._get_noticias(
             "https://www.cnnbrasil.com.br/",
             tag="a",
@@ -84,20 +84,21 @@ class Site:
                 title = noticia.get_text(strip=True)
                 url = noticia.get("href")
                 if isinstance(url, str):
-                    self.news.append(News(title=title, url=url))
+                    self.list_news.append(Article(title=title, url=url))
 
-    def scrape_veja(self):
+    def _scrape_veja(self) -> None:
         noticias = self._get_noticias(
             "https://veja.abril.com.br/",
             tag="a",
         )
         tg_class = "title"
-
         for noticia in noticias:
             if not isinstance(noticia, Tag):
                 continue
 
             title = None
+            url = noticia.get("href")
+
             for tag in [noticia.h2, noticia.h3, noticia.h4]:
                 if tag is None:
                     continue
@@ -107,17 +108,14 @@ class Site:
                     continue
 
                 if tg_class in tag_class:
-                    raw_title = noticia.get_text(strip=True)
-                    cleaned_title = " ".join(raw_title.split())
-                    title = cleaned_title
+                    title = re.sub(r"^\d+", "", tag.get_text(strip=True))
                     break
 
             if title:
-                url = noticia.get("href")
                 if isinstance(url, str):
-                    self.news.append(News(title=title, url=url))
+                    self.list_news.append(Article(title=title, url=url))
 
-    def scrape_r7(self):
+    def _scrape_r7(self) -> None:
         noticias = self._get_noticias(
             "https://www.r7.com/",
             tag="h3",
@@ -133,4 +131,58 @@ class Site:
             title = noticia.a.get_text(strip=True)
             url = noticia.a.get("href")
             if isinstance(url, str):
-                self.news.append(News(title=title, url=url))
+                self.list_news.append(Article(title=title, url=url))
+
+    def _scrape_livecoins(self) -> None:
+        noticias = self._get_noticias(
+            "https://livecoins.com.br/",
+            tag="a",
+        )
+        tg_class = "bookmark"
+        processed_urls = set()
+
+        for noticia in noticias:
+            if not isinstance(noticia, Tag):
+                continue
+
+            tag_class = noticia.get("rel")
+            if tag_class is None:
+                continue
+
+            if tg_class in tag_class:
+                title = noticia.get("title")
+                url = noticia.get("href")
+
+                if isinstance(url, str) and isinstance(title, str):
+                    if url not in processed_urls:
+                        self.list_news.append(Article(title=title, url=url))
+                        processed_urls.add(url)
+
+    def _scrape_poder360(self) -> None:
+        noticias = self._get_noticias(
+            "https://www.poder360.com.br/",
+            tag="h2",
+        ) + self._get_noticias(
+            "https://www.poder360.com.br/",
+            tag="h3",
+        )
+        tg_classes = [
+            "box-news-list__highlight-subhead",
+            "box-news-list__subhead",
+            "box-queue__subhead",
+        ]
+
+        for noticia in noticias:
+            if not isinstance(noticia, Tag) or noticia.a is None:
+                continue
+
+            if not (h_class := noticia.get("class")):
+                continue
+
+            if not any(class_name in tg_classes for class_name in h_class):
+                continue
+
+            title = noticia.get_text(strip=True)
+            url = noticia.a.get("href")
+            if isinstance(url, str):
+                self.list_news.append(Article(title=title, url=url))
