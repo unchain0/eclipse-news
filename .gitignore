@@ -1,6 +1,5 @@
 # Project files
-news
-sites
+*.pkl
 
 # Python-generated files
 __pycache__/
