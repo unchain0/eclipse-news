@@ -1,9 +1,15 @@
+import logging
 import re
 
 import requests
 from bs4 import BeautifulSoup, Tag
 
+from scripts.log_config import setup_logging
 from scripts.utils import Article
+
+# Configurar logging básico
+# logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s') # Removido
+setup_logging()  # Adicionado
 
 
 class Site:
@@ -30,9 +36,14 @@ class Site:
                 self._scrape_poder360()
 
     def _get_noticias(self, url: str, tag: str = "a"):
-        response = requests.get(url, headers=self.headers)
-        soup = BeautifulSoup(response.text, "html.parser")
-        return soup.find_all(tag)
+        try:
+            response = requests.get(url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+            soup = BeautifulSoup(response.text, "html.parser")
+            return soup.find_all(tag)
+        except requests.exceptions.RequestException as e:
+            logging.error(f"Erro ao buscar notícias de {url}: {e}")
+            return []
 
     def _scrape_globo(self) -> None:
         noticias = self._get_noticias(
@@ -57,7 +68,7 @@ class Site:
                 continue
 
             if any(class_name in tg_classes for class_name in h2_class):
-                title = noticia.get_text(strip=True)
+                title = noticia.get_text().strip()
                 url = noticia.get("href")
                 if isinstance(url, str):
                     self.list_news.append(Article(title=title, url=url))
@@ -81,7 +92,7 @@ class Site:
                 continue
 
             if tg_class in h3_class:
-                title = noticia.get_text(strip=True)
+                title = noticia.get_text().strip()
                 url = noticia.get("href")
                 if isinstance(url, str):
                     self.list_news.append(Article(title=title, url=url))
@@ -108,7 +119,7 @@ class Site:
                     continue
 
                 if tg_class in tag_class:
-                    title = re.sub(r"^\d+", "", tag.get_text(strip=True))
+                    title = re.sub(r"^\d+", "", tag.get_text().strip())
                     break
 
             if title:
@@ -121,6 +132,7 @@ class Site:
             tag="h3",
         )
 
+        # TODO: Corrigir algumas noticias que não estão sendo pegas
         for noticia in noticias:
             if not isinstance(noticia, Tag):
                 continue
@@ -128,7 +140,7 @@ class Site:
             if noticia.a is None:
                 continue
 
-            title = noticia.a.get_text(strip=True)
+            title = noticia.a.get_text().strip()
             url = noticia.a.get("href")
             if isinstance(url, str):
                 self.list_news.append(Article(title=title, url=url))
@@ -155,7 +167,7 @@ class Site:
 
                 if isinstance(url, str) and isinstance(title, str):
                     if url not in processed_urls:
-                        self.list_news.append(Article(title=title, url=url))
+                        self.list_news.append(Article(title=title.strip(), url=url))
                         processed_urls.add(url)
 
     def _scrape_poder360(self) -> None:
@@ -182,7 +194,7 @@ class Site:
             if not any(class_name in tg_classes for class_name in h_class):
                 continue
 
-            title = noticia.get_text(strip=True)
+            title = noticia.get_text().strip()
             url = noticia.a.get("href")
             if isinstance(url, str):
                 self.list_news.append(Article(title=title, url=url))
