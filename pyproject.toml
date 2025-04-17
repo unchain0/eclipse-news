@@ -9,3 +9,7 @@ dependencies = [
     "pytimedinput>=2.0.1",
     "requests>=2.32.3",
 ]
+
+[tool.ruff]
+line-length = 88
+lint.select = ["A", "B", "C", "E", "F", "W", "I", "N", "UP", "RUF"]
