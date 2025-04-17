@@ -17,7 +17,6 @@ from scripts.log_config import setup_logging
 from scripts.site import Site
 from scripts.utils import News
 
-# Configurar logging básico (mesmo que em site.py, pode ser centralizado depois)
 setup_logging()
 
 

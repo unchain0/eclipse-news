@@ -7,9 +7,7 @@ from bs4 import BeautifulSoup, Tag
 from scripts.log_config import setup_logging
 from scripts.utils import Article
 
-# Configurar logging básico
-# logging.basicConfig(level=logging.ERROR, format='%(asctime)s - %(levelname)s - %(message)s') # Removido
-setup_logging()  # Adicionado
+setup_logging()
 
 
 class Site:
@@ -17,7 +15,10 @@ class Site:
         self.site = site_name
         self.list_news: list[Article] = []
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0"
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) "
+                "Gecko/20100101 Firefox/137.0"
+            )
         }
 
     def update_news(self):
