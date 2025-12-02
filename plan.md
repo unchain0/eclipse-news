@@ -106,9 +106,9 @@ Proposta de organização dentro do repositório atual:
 
 ```text
 prisma-news/ (nome lógico do projeto)
-  scripts/
-    site.py           # scrapers atuais (reutilizado)
-    utils.py          # dataclasses Article/News (podem ser usados como auxiliares)
+  scripts/            # código legado (CLI + scrapers), será removido após refatoração
+    site.py           # scrapers atuais (LEGACY; serão reescritos em app/services e depois removidos)
+    utils.py          # dataclasses Article/News (podem ser usados como auxiliares, mas serão migradas se necessário)
     asimov_news.py    # CLI legado (não será mais o entrypoint principal)
   app/
     __init__.py
@@ -159,11 +159,10 @@ prisma-news/ (nome lógico do projeto)
 
 #### 3.2.5. `app/services/scraping_service.py`
 
-- Reutiliza `scripts/site.py`:
-  - Para cada slug de site suporta­do (`veja`, `r7`, `globo`, `cnn`, `livecoins`, `poder360`):
-    - Instancia `Site(slug)`.
-    - Chama `update_news()` para popular `list_news` com `Article`.
-- Converte `Article` → `NewsModel` e grava no banco respeitando:
+- Reescreve a lógica de scraping que hoje está em `scripts/site.py` para serviços internos do backend:
+  - Um serviço central (`scraping_service.py`) e, se necessário, helpers específicos por site.
+  - Sem importar diretamente a pasta `scripts/` (que será removida após a migração).
+- Converte os dados raspados → `NewsModel` e grava no banco respeitando:
   - `UNIQUE(site_id, url)`.
   - Histórico completo (não apaga registros antigos; apenas evita duplicar mesma URL).
 - Funções planejadas:
@@ -291,7 +290,8 @@ prisma-news-web/
 
 ### Fase 4 – Serviço de Scraping e Job em Background
 
-- Implementar `scraping_service.py` utilizando `scripts/site.py`:
+- Reescrever a lógica de scraping existente na pasta `scripts/` em serviços dentro de `app/services/`:
+  - Implementar `scraping_service.py` e, se necessário, módulos auxiliares por site.
   - Funções `scrape_all_sites_once` e `scraping_loop`.
 - Integrar o loop de scraping com o evento de `startup` do FastAPI via thread daemon.
 
@@ -301,10 +301,10 @@ prisma-news-web/
 - Implementar `GET /news` em `routers/news.py` com filtros por site e paginação.
 - Garantir que o frontend possa filtrar notícias por lista de slugs de sites.
 
-### Fase 6 – Descontinuação do CLI como EntryPoint Principal
+### Fase 6 – Descontinuação do CLI e Remoção de Código Legado
 
 - Ajustar o `main.py` raiz do repositório (ou scripts de execução) para usar `uvicorn app.main:app`.
-- Manter `scripts/asimov_news.py` como legado para referência ou remoção futura.
+- Remover a pasta `scripts/` (CLI e scrapers legados), após confirmar que toda a lógica necessária foi migrada para `app/`.
 
 ### Fase 7 – Frontend Angular
 
@@ -343,9 +343,9 @@ Algumas decisões foram deixadas para mais tarde, mas o planejamento já prevê 
 
 ## 8. Checklist de Implementação
 
-- [ ] Fase 1 – Infraestrutura de Desenvolvimento (Postgres local, banco `prisma_news_dev`, `.env` de dev)
+- [x] Fase 1 – Infraestrutura de Desenvolvimento (Postgres local, banco `prisma_news_dev`, `.env` de dev)
 - [x] Fase 2 – Esqueleto do Backend FastAPI (pasta `app/`, `main.py`, `config.py`, `database.py`, estruturas básicas de `routers/` e `services/`)
-- [ ] Fase 3 – Modelos SQLAlchemy e Migrações Alembic (`SiteModel`, `NewsModel`, configuração do Alembic e migração inicial)
+- [x] Fase 3 – Modelos SQLAlchemy e Migrações Alembic (`SiteModel`, `NewsModel`, configuração do Alembic e migração inicial)
 - [ ] Fase 4 – Serviço de Scraping e Job em Background (reutilizando `scripts/site.py` e integrando com o banco)
 - [ ] Fase 5 – Endpoints `/sites` e `/news` com filtros por site e paginação
 - [ ] Fase 6 – Descontinuação do CLI como entrypoint principal (usar `uvicorn app.main:app`)
