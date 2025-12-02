@@ -9,13 +9,15 @@ from datetime import datetime
 from math import ceil
 from pathlib import Path
 from threading import Lock, Thread
-from typing import Final, Literal
+from typing import Final, Literal, TypeVar, overload
 
 from pytimedinput import timedInput
 
 from scripts.log_config import setup_logging
 from scripts.site import Site
 from scripts.utils import News
+
+T = TypeVar("T", News, str)
 
 setup_logging()
 
@@ -51,7 +53,7 @@ class AsimovNews:
         )
         self.news_thread.start()
 
-    def _update_file(self, data: list, filepath: Path):
+    def _update_file(self, data: list[News] | list[str], filepath: Path) -> None:
         file_to_write = None
         lock_acquired = False
         try:
@@ -77,7 +79,15 @@ class AsimovNews:
             if lock_acquired:
                 self.news_lock.release()
 
-    def _read_file(self, filepath: Path, mode: Literal["news", "sites"]) -> list:
+    @overload
+    def _read_file(self, filepath: Path, mode: Literal["news"]) -> list[News]: ...
+
+    @overload
+    def _read_file(self, filepath: Path, mode: Literal["sites"]) -> list[str]: ...
+
+    def _read_file(
+        self, filepath: Path, mode: Literal["news", "sites"]
+    ) -> list[News] | list[str]:
         # Adquirir lock antes de ler news.pkl
         lock_acquired = False
         if filepath == self.news_file:
@@ -189,15 +199,15 @@ class AsimovNews:
         for i, site in enumerate(offline_sites, start=1):
             print(f"\t {i}. {site}")
 
-        site = int(
+        site_index = int(
             self._receive_command(
                 [str(i) for i in range(len(offline_sites) + 1)], timeout=50
             )
         )
-        if site == 0:
+        if site_index == 0:
             self.screen = 0
             return
-        self.sites += [offline_sites[site - 1]]
+        self.sites += [offline_sites[site_index - 1]]
         self._update_file(self.sites, self.sites_file)
 
     def _handle_remove_site_screen(self) -> None:
@@ -211,15 +221,15 @@ class AsimovNews:
         for i, site in enumerate(self.sites, start=1):
             print(f"\t {i}. {site}")
 
-        site = int(
+        site_index = int(
             self._receive_command(
                 [str(i) for i in range(len(self.sites) + 1)], timeout=50
             )
         )
-        if site == 0:
+        if site_index == 0:
             self.screen = 0
             return
-        del self.sites[site - 1]
+        del self.sites[site_index - 1]
         self._update_file(self.sites, self.sites_file)
 
     def main_loop(self) -> None:

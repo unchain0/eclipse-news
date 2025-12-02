@@ -82,10 +82,7 @@ class Site:
         tg_class = "block__news__title"
 
         for noticia in noticias:
-            if not isinstance(noticia, Tag):
-                continue
-
-            if noticia.h3 is None:
+            if not isinstance(noticia, Tag) or noticia.h3 is None:
                 continue
 
             h3_class = noticia.h3.get("class")
