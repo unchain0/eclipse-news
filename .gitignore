@@ -1,13 +1,38 @@
-# Project files
-*.pkl
-
-# Python-generated files
+# Python / Build
 __pycache__/
-*.py[oc]
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
+*.egg
 
 # Virtual environments
-.venv
+.venv/
+
+# Configuração / Secrets
+.env
+.env.*
+*.env
+
+# Caches de ferramentas
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# IDE / Editor
+.vscode/
+.idea/
+*.code-workspace
+
+# Dados de runtime / projeto
+*.pkl
+postgres-data/
+
