@@ -13,13 +13,15 @@ dependencies = [
     "sqlalchemy>=2.0.0",
     "psycopg2-binary>=2.9.0",
     "python-dotenv>=1.0.0",
+    "loguru>=0.7.3",
 ]
 
 [tool.ruff]
-line-length = 88
+exclude = ["postgres-data"]
 
 [tool.mypy]
 ignore_missing_imports = true
+exclude = ["postgres-data"]
 
 [dependency-groups]
 dev = [

@@ -31,6 +31,7 @@
   - Framework: **FastAPI**.
   - ORM: **SQLAlchemy síncrono**.
   - Migrações: **Alembic**.
+  - Logging: **loguru**
 
 - **Frontend**
 
@@ -119,7 +120,8 @@ prisma-news/ (nome lógico do projeto)
     schemas.py        # modelos Pydantic (SiteOut, NewsOut, PaginatedNewsOut)
     services/
       __init__.py
-      scraping_service.py   # lógica de scraping e gravação no banco
+      scraping_core.py   # funções e tipos de scraping (HTTP/HTML) por site
+      scraping.py        # classe Scraping (integra scraping_core com o banco e o loop em background)
     routers/
       __init__.py
       sites.py        # endpoints relacionados a sites (GET /sites)
@@ -157,25 +159,31 @@ prisma-news/ (nome lógico do projeto)
   - `NewsOut`
   - `PaginatedNewsOut` (contendo `items`, `total`, `page`, `page_size`, `pages`).
 
-#### 3.2.5. `app/services/scraping_service.py`
+#### 3.2.5. `app/services/scraping_core.py`
 
-- Reescreve a lógica de scraping que hoje está em `scripts/site.py` para serviços internos do backend:
-  - Um serviço central (`scraping_service.py`) e, se necessário, helpers específicos por site.
-  - Sem importar diretamente a pasta `scripts/` (que será removida após a migração).
-- Converte os dados raspados → `NewsModel` e grava no banco respeitando:
-  - `UNIQUE(site_id, url)`.
-  - Histórico completo (não apaga registros antigos; apenas evita duplicar mesma URL).
-- Funções planejadas:
-  - `scrape_all_sites_once(session_factory)` – roda uma varredura completa de todos os sites.
-  - `scraping_loop(session_factory, interval_seconds)` – loop infinito com `sleep(interval_seconds)`.
+- Contém a lógica de scraping em si (sem acesso a banco):
+  - Constantes (`SUPPORTED_SITE_SLUGS`, `SITE_DISPLAY_NAMES`, `HEADERS`).
+  - Dataclass `ScrapedArticle`.
+  - Função `_fetch_elements` (HTTP + parse de HTML com BeautifulSoup).
+  - Funções específicas por site (`_scrape_globo`, `_scrape_cnn`, `_scrape_veja`, `_scrape_r7`, `_scrape_livecoins`, `_scrape_poder360`).
+  - `SCRAPER_MAP` e `scrape_site(slug)` que retornam `list[ScrapedArticle]`.
 
-#### 3.2.6. Job em Background (em `app/main.py`)
+#### 3.2.6. `app/services/scraping.py`
 
-- No evento `startup` da aplicação FastAPI:
-  - Cria uma thread daemon que executa `scraping_loop(...)` com `interval_seconds` vindo da configuração (default 60).
-- O backend continua respondendo requisições enquanto o job de scraping atualiza o banco.
+- Contém a classe `Scraping`, responsável por:
+  - Integrar o scraping com o banco (`SiteModel`, `NewsModel`).
+  - Garantir que todos os `SiteModel` existam no banco (`ensure_sites_exist`).
+  - Inserir notícias novas respeitando `UNIQUE(site_id, url)` e mantendo o histórico completo.
+  - Executar um ciclo de scraping (`run_once`) e o loop contínuo (`loop`), utilizando `SessionLocal`.
 
-#### 3.2.7. Rotas / Endpoints
+#### 3.2.7. Job em Background (em `app/main.py`)
+
+- Usa o parâmetro `lifespan` do FastAPI com um `@asynccontextmanager`:
+  - Cria uma instância de `Scraping` com o intervalo configurado em `SCRAPE_INTERVAL_SECONDS`.
+  - Inicia uma `Thread` daemon que executa `Scraping.loop()` antes de a aplicação começar a atender requisições.
+- O backend continua respondendo requisições enquanto o job de scraping atualiza o banco periodicamente.
+
+#### 3.2.8. Rotas / Endpoints
 
 - **`GET /health`**
 
@@ -291,9 +299,9 @@ prisma-news-web/
 ### Fase 4 – Serviço de Scraping e Job em Background
 
 - Reescrever a lógica de scraping existente na pasta `scripts/` em serviços dentro de `app/services/`:
-  - Implementar `scraping_service.py` e, se necessário, módulos auxiliares por site.
+  - Implementar `scraping_core.py` e, se necessário, módulos auxiliares por site.
   - Funções `scrape_all_sites_once` e `scraping_loop`.
-- Integrar o loop de scraping com o evento de `startup` do FastAPI via thread daemon.
+- Integrar o loop de scraping com o evento de `lifespan` do FastAPI via thread daemon.
 
 ### Fase 5 – Endpoints `/sites` e `/news`
 
@@ -346,8 +354,8 @@ Algumas decisões foram deixadas para mais tarde, mas o planejamento já prevê 
 - [x] Fase 1 – Infraestrutura de Desenvolvimento (Postgres local, banco `prisma_news_dev`, `.env` de dev)
 - [x] Fase 2 – Esqueleto do Backend FastAPI (pasta `app/`, `main.py`, `config.py`, `database.py`, estruturas básicas de `routers/` e `services/`)
 - [x] Fase 3 – Modelos SQLAlchemy e Migrações Alembic (`SiteModel`, `NewsModel`, configuração do Alembic e migração inicial)
-- [ ] Fase 4 – Serviço de Scraping e Job em Background (reutilizando `scripts/site.py` e integrando com o banco)
-- [ ] Fase 5 – Endpoints `/sites` e `/news` com filtros por site e paginação
-- [ ] Fase 6 – Descontinuação do CLI como entrypoint principal (usar `uvicorn app.main:app`)
+- [x] Fase 4 – Serviço de Scraping e Job em Background (reescrevendo scraping em `app/services` e integrando com o banco)
+- [x] Fase 5 – Endpoints `/sites` e `/news` com filtros por site e paginação
+- [x] Fase 6 – Descontinuação do CLI como entrypoint principal (usar `uvicorn app.main:app --reload --reload-dir app --reload-dir migrations`)
 - [ ] Fase 7 – Frontend Angular (projeto `prisma-news-web`, serviços e componentes básicos)
 - [ ] Fase 8 – Preparação para Produção (Supabase, deploy do FastAPI e do Angular, `.env.prod`)

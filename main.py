@@ -1,5 +1,9 @@
-from scripts.asimov_news import AsimovNews
+def main() -> None:
+    raise SystemExit(
+        "Prisma News agora é uma API FastAPI.\n"
+        "Use: 'uvicorn app.main:app --reload --reload-dir app --reload-dir migrations'"
+    )
+
 
 if __name__ == "__main__":
-    asimov_news = AsimovNews()
-    asimov_news.main_loop()
+    main()
