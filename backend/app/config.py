@@ -1,15 +1,15 @@
 import os
 
 from dotenv import load_dotenv
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 load_dotenv()
 
 
 class Settings(BaseModel):
-    database_url: str
-    scrape_interval_seconds: int
-    allowed_origins: list[str]
+    database_url: str = Field(..., min_length=1)
+    scrape_interval_seconds: int = Field(..., ge=1)
+    allowed_origins: list[str] = Field(default_factory=list)
 
 
 def _parse_allowed_origins(value: str) -> list[str]:

@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import requests
 from bs4 import BeautifulSoup, Tag
 from loguru import logger
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0"
@@ -14,8 +14,8 @@ HEADERS = {"User-Agent": USER_AGENT}
 
 
 class ScrapedArticle(BaseModel):
-    title: str
-    url: str
+    title: str = Field(..., min_length=1)
+    url: str = Field(..., min_length=1)
 
 
 class Scraper(ABC):
