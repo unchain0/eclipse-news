@@ -29,7 +29,9 @@ class Poder360Scraper(Scraper):
             if not any(class_name in tg_classes for class_name in h_class):
                 continue
 
-            title = noticia.get_text().strip()
+            if len((title := noticia.get_text().strip())) < 30:
+                continue
+
             if isinstance((url := noticia.a.get("href")), str):
                 articles.append(ScrapedArticle(title=title, url=url))
 

@@ -33,6 +33,9 @@ class MetropolesScraper(Scraper):
             if " " not in raw_title:
                 continue
 
+            if len(raw_title) < 20:
+                continue
+
             if url in processed_urls:
                 continue
 

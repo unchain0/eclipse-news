@@ -9,7 +9,6 @@ from app.models import NewsModel, SiteModel
 from app.schemas import NewsOut, PaginatedNewsOut
 from app.services.scraping_core import SUPPORTED_SITE_SLUGS
 
-
 router = APIRouter(prefix="/news", tags=["news"])
 
 
@@ -21,6 +20,12 @@ def list_news(
     ),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
+    search: str | None = Query(
+        None,
+        description="Search term to filter news by title",
+        min_length=1,
+        max_length=200,
+    ),
     db: Session = Depends(get_db),
 ) -> PaginatedNewsOut:
     if sites is None or not sites.strip():
@@ -40,6 +45,10 @@ def list_news(
         .filter(SiteModel.slug.in_(slug_list))
         .order_by(NewsModel.scraped_at.desc())
     )
+
+    if search is not None and search.strip():
+        pattern = f"%{search.strip()}%"
+        base_query = base_query.filter(NewsModel.title.ilike(pattern))
 
     total = base_query.count()
     if total == 0:

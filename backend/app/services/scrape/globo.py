@@ -34,7 +34,9 @@ class GloboScraper(Scraper):
             if url in processed_urls:
                 continue
 
-            title = noticia.h2.get_text().strip()
+            if len((title := noticia.h2.get_text().strip())) < 30:
+                continue
+
             if " " not in title:
                 continue
 

@@ -43,7 +43,7 @@ class UOLScraper(Scraper):
             if not lines:
                 continue
 
-            long_lines = [line for line in lines if len(line) >= 20]
+            long_lines = [line for line in lines if len(line) >= 30]
             if not long_lines:
                 continue
 
