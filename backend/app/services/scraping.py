@@ -29,13 +29,18 @@ class Scraping:
         }
 
         for slug in SUPPORTED_SITE_SLUGS:
-            if slug not in slug_to_site:
+            desired_name = SITE_DISPLAY_NAMES.get(slug, slug.upper())
+
+            site = slug_to_site.get(slug)
+            if site is None:
                 site = SiteModel(
                     slug=slug,
-                    name=SITE_DISPLAY_NAMES.get(slug, slug.upper()),
+                    name=desired_name,
                 )
                 db.add(site)
                 slug_to_site[slug] = site
+            elif site.name != desired_name:
+                site.name = desired_name
 
         db.commit()
 

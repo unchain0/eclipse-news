@@ -1,13 +1,12 @@
 import os
-from dataclasses import dataclass
 
 from dotenv import load_dotenv
+from pydantic import BaseModel
 
 load_dotenv()
 
 
-@dataclass
-class Settings:
+class Settings(BaseModel):
     database_url: str
     scrape_interval_seconds: int
     allowed_origins: list[str]
