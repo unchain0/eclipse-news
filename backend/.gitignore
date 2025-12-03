@@ -1,23 +1,11 @@
-# Python / Build
+# Python
 __pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-*.so
-
-build/
-dist/
-wheels/
-*.egg-info/
-*.egg
 
 # Virtual environments
 .venv/
 
 # Configuração / Secrets
 .env
-.env.*
-*.env
 
 # Caches de ferramentas
 .mypy_cache/
@@ -33,6 +21,4 @@ htmlcov/
 *.code-workspace
 
 # Dados de runtime / projeto
-*.pkl
 postgres-data/
-
