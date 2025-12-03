@@ -38,6 +38,27 @@
     </section>
 
     <section class="space-y-2">
+      <h2 class="text-base font-medium text-slate-100">Período</h2>
+      <div class="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
+        <label class="block text-xs font-medium text-slate-300 mb-1" for="time-range-select">
+          Intervalo de tempo
+        </label>
+        <select
+          id="time-range-select"
+          class="w-full rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+          [value]="timeRange()"
+          (change)="onTimeRangeChange($any($event.target).value)"
+        >
+          <option value="all">Qualquer data</option>
+          <option value="1h">Última 1 hora</option>
+          <option value="6h">Últimas 6 horas</option>
+          <option value="24h">Últimas 24 horas</option>
+          <option value="7d">Últimos 7 dias</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="space-y-2">
       <h2 class="text-base font-medium text-slate-100">Notícias</h2>
       <div class="rounded-lg border border-slate-800 bg-slate-900/60 p-4">
         <app-news-list

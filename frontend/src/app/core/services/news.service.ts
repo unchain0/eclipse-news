@@ -20,6 +20,7 @@ export class NewsService {
     page?: number;
     pageSize?: number;
     search?: string | null;
+    timeRange?: string | null;
   }): Observable<PaginatedNews> {
     let params = new HttpParams();
 
@@ -37,6 +38,10 @@ export class NewsService {
 
     if (options?.search != null && options.search.trim() !== '') {
       params = params.set('search', options.search.trim());
+    }
+
+    if (options?.timeRange != null && options.timeRange.trim() !== '') {
+      params = params.set('time_range', options.timeRange.trim());
     }
 
     return this.http.get<PaginatedNews>(`${this.baseUrl}/news`, { params });

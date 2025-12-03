@@ -13,6 +13,8 @@ import { NewsService } from './core/services/news.service';
 import { NewsListComponent } from './news/news-list.component';
 import { SiteFilterComponent } from './news/site-filter.component';
 
+type TimeRange = 'all' | '1h' | '6h' | '24h' | '7d';
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
@@ -36,6 +38,7 @@ export class App implements OnInit, OnDestroy {
   protected readonly paginatedNews = signal<PaginatedNews | null>(null);
   protected readonly highlightedNewsIds = signal<number[]>([]);
   protected readonly searchTerm = signal('');
+  protected readonly timeRange = signal<TimeRange>('all');
 
   private searchDebounceId: number | null = null;
 
@@ -103,6 +106,26 @@ export class App implements OnInit, OnDestroy {
     }, 300);
   }
 
+  protected onTimeRangeChange(value: string): void {
+    let next: TimeRange;
+
+    switch (value) {
+      case '1h':
+      case '6h':
+      case '24h':
+      case '7d':
+        next = value as TimeRange;
+        break;
+      default:
+        next = 'all';
+        break;
+    }
+
+    this.timeRange.set(next);
+    this.page.set(1);
+    this.loadNews();
+  }
+
   protected onPageChange(newPage: number): void {
     this.page.set(newPage);
     this.loadNews();
@@ -133,6 +156,7 @@ export class App implements OnInit, OnDestroy {
         page: this.page(),
         pageSize: this.pageSize,
         search: search === '' ? null : search,
+        timeRange: this.timeRange() === 'all' ? null : this.timeRange(),
       })
       .subscribe({
         next: (response) => {
