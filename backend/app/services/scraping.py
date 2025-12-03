@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 import time
+from datetime import datetime, timezone
 
 from loguru import logger
 from sqlalchemy.orm import Session
@@ -13,11 +13,6 @@ from app.services.scraping_core import (
     SUPPORTED_SITE_SLUGS,
     scrape_site,
 )
-
-
-SITE_MIN_INTERVAL_SECONDS: dict[str, int] = {
-    "r7": 300,
-}
 
 
 class Scraping:
@@ -62,14 +57,9 @@ class Scraping:
                 continue
 
             now = time.time()
-            min_interval = SITE_MIN_INTERVAL_SECONDS.get(slug, 0)
             last_run = self._last_run_per_site.get(slug)
-            if (
-                min_interval > 0
-                and last_run is not None
-                and now - last_run < min_interval
-            ):
-                remaining = int(min_interval - (now - last_run))
+            if last_run is not None and now - last_run < self.interval_seconds:
+                remaining = int(self.interval_seconds - (now - last_run))
                 logger.info(
                     "Skipping site {slug} due to cooldown ({remaining}s remaining)",
                     slug=slug,
