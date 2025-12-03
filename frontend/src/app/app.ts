@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  OnDestroy,
+  OnInit,
+  inject,
+  signal,
+} from '@angular/core';
 
 import type { PaginatedNews } from './core/models/news.model';
 import type { Site } from './core/models/site.model';
@@ -13,8 +20,10 @@ import { SiteFilterComponent } from './news/site-filter.component';
   imports: [SiteFilterComponent, NewsListComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   private readonly newsService = inject(NewsService);
+
+  private refreshIntervalId: number | null = null;
 
   protected readonly sites = signal<Site[]>([]);
   protected readonly loadingSites = signal(false);
@@ -25,9 +34,29 @@ export class App implements OnInit {
 
   protected readonly loadingNews = signal(false);
   protected readonly paginatedNews = signal<PaginatedNews | null>(null);
+  protected readonly highlightedNewsIds = signal<number[]>([]);
 
   ngOnInit(): void {
     this.loadSitesAndInitialNews();
+
+    this.refreshIntervalId = window.setInterval(() => {
+      if (document.visibilityState !== 'visible') {
+        return;
+      }
+
+      if (this.loadingNews()) {
+        return;
+      }
+
+      this.loadNews();
+    }, 30_000);
+  }
+
+  ngOnDestroy(): void {
+    if (this.refreshIntervalId !== null) {
+      window.clearInterval(this.refreshIntervalId);
+      this.refreshIntervalId = null;
+    }
   }
 
   private loadSitesAndInitialNews(): void {
@@ -69,11 +98,13 @@ export class App implements OnInit {
         page_size: this.pageSize,
         pages: 0,
       });
+      this.highlightedNewsIds.set([]);
       return;
     }
 
     this.loadingNews.set(true);
 
+    const previous = this.paginatedNews();
     this.newsService
       .getNews({
         sites: slugs,
@@ -82,6 +113,16 @@ export class App implements OnInit {
       })
       .subscribe({
         next: (response) => {
+          if (previous && previous.page === response.page) {
+            const previousIds = new Set(previous.items.map((item) => item.id));
+            const newIds = response.items
+              .filter((item) => !previousIds.has(item.id))
+              .map((item) => item.id);
+            this.highlightedNewsIds.set(newIds);
+          } else {
+            this.highlightedNewsIds.set(response.items.map((item) => item.id));
+          }
+
           this.paginatedNews.set(response);
         },
         error: (error) => {

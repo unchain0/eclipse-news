@@ -7,14 +7,15 @@ import type { PaginatedNews } from '../core/models/news.model';
   selector: 'app-news-list',
   template: `
     <div class="space-y-4">
-      @if (loading()) {
-      <p class="text-sm text-slate-400">Carregando notícias...</p>
-      } @else if (!hasNews()) {
+      @if (!hasNews()) {
       <p class="text-sm text-slate-400">Nenhuma notícia encontrada.</p>
       } @else {
       <ul class="space-y-3">
         @for (item of news()!.items; track item.id) {
-        <li class="rounded-md border border-slate-800 bg-slate-900/60 px-4 py-3">
+        <li
+          class="rounded-md border border-slate-800 bg-slate-900/60 px-4 py-3"
+          [class.animate-news-enter]="isHighlighted(item.id)"
+        >
           <a
             class="text-sm font-medium text-sky-400 hover:text-sky-300 underline-offset-4 hover:underline"
             [href]="item.url"
@@ -54,7 +55,10 @@ import type { PaginatedNews } from '../core/models/news.model';
           Próxima
         </button>
       </nav>
-      }
+
+      @if (loading()) {
+      <p class="text-xs text-slate-500">Atualizando notícias...</p>
+      } }
     </div>
   `,
   imports: [DatePipe],
@@ -63,6 +67,7 @@ import type { PaginatedNews } from '../core/models/news.model';
 export class NewsListComponent {
   readonly news = input<PaginatedNews | null>(null);
   readonly loading = input(false);
+  readonly highlightIds = input<number[]>([]);
 
   readonly pageChange = output<number>();
 
@@ -73,6 +78,10 @@ export class NewsListComponent {
 
   protected readonly currentPage = computed(() => this.news()?.page ?? 1);
   protected readonly totalPages = computed(() => this.news()?.pages ?? 1);
+
+  protected isHighlighted(id: number): boolean {
+    return this.highlightIds().includes(id);
+  }
 
   protected onPrevious(): void {
     const page = this.currentPage();

@@ -26,6 +26,7 @@
         <app-news-list
           [news]="paginatedNews()"
           [loading]="loadingNews()"
+          [highlightIds]="highlightedNewsIds()"
           (pageChange)="onPageChange($event)"
         ></app-news-list>
       </div>
