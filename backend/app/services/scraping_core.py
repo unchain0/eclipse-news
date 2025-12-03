@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 from typing import Callable
 
 import requests
 from bs4 import BeautifulSoup, Tag
 from loguru import logger
-
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:137.0) Gecko/20100101 Firefox/137.0"
@@ -61,6 +60,8 @@ def _scrape_globo() -> list[ScrapedArticle]:
     ]
 
     articles: list[ScrapedArticle] = []
+    candidate_urls: set[str] = set()
+
     for noticia in noticias:
         if noticia.h2 is None:
             continue
@@ -70,10 +71,23 @@ def _scrape_globo() -> list[ScrapedArticle]:
             continue
 
         if any(class_name in tg_classes for class_name in h2_class):
-            title = noticia.get_text().strip()
             url = noticia.get("href")
             if isinstance(url, str):
-                articles.append(ScrapedArticle(title=title, url=url))
+                candidate_urls.add(url)
+
+    # Para cada URL candidata, busca o título diretamente na página do artigo
+    for url in candidate_urls:
+        headings = _fetch_elements(url, tag="h1")
+        title: str | None = None
+
+        for heading in headings:
+            raw_title = heading.get_text().strip()
+            if raw_title:
+                title = raw_title
+                break
+
+        if title:
+            articles.append(ScrapedArticle(title=title, url=url))
 
     return articles
 
