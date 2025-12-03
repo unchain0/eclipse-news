@@ -18,7 +18,7 @@ import type { Site } from '../core/models/site.model';
             type="checkbox"
             class="h-4 w-4 rounded border-slate-700 bg-slate-900 text-sky-500 focus-visible:outline-none focus-visible:ring focus-visible:ring-sky-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
             [checked]="isSelected(site.slug)"
-            (change)="onCheckboxChange(site.slug, $event.target?.checked ?? false)"
+            (change)="onCheckboxChange(site.slug, $event.target.checked)"
           />
           <span>{{ site.name }}</span>
         </label>
