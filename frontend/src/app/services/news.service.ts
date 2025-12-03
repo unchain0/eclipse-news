@@ -2,9 +2,9 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-import { environment } from '../../../environments/environment';
-import type { Site } from '../models/site.model';
-import type { PaginatedNews } from '../models/news.model';
+import { environment } from '../../environments/environment';
+import type { Site } from '../model/site.model';
+import type { PaginatedNews } from '../model/news.model';
 
 @Injectable({ providedIn: 'root' })
 export class NewsService {
