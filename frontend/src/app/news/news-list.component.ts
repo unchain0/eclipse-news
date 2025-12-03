@@ -24,7 +24,7 @@ import type { PaginatedNews } from '../core/models/news.model';
             {{ item.title }}
           </a>
           <p class="mt-1 text-xs text-slate-400">
-            {{ item.scraped_at | date : 'dd/MM/yyyy HH:mm' }}
+            {{ item.scraped_at | date : 'short' }}
           </p>
         </li>
         }
