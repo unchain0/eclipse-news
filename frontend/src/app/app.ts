@@ -35,6 +35,9 @@ export class App implements OnInit, OnDestroy {
   protected readonly loadingNews = signal(false);
   protected readonly paginatedNews = signal<PaginatedNews | null>(null);
   protected readonly highlightedNewsIds = signal<number[]>([]);
+  protected readonly searchTerm = signal('');
+
+  private searchDebounceId: number | null = null;
 
   ngOnInit(): void {
     this.loadSitesAndInitialNews();
@@ -56,6 +59,11 @@ export class App implements OnInit, OnDestroy {
     if (this.refreshIntervalId !== null) {
       window.clearInterval(this.refreshIntervalId);
       this.refreshIntervalId = null;
+    }
+
+    if (this.searchDebounceId !== null) {
+      window.clearTimeout(this.searchDebounceId);
+      this.searchDebounceId = null;
     }
   }
 
@@ -82,6 +90,19 @@ export class App implements OnInit, OnDestroy {
     this.loadNews();
   }
 
+  protected onSearchChange(value: string): void {
+    this.searchTerm.set(value ?? '');
+    this.page.set(1);
+
+    if (this.searchDebounceId !== null) {
+      window.clearTimeout(this.searchDebounceId);
+    }
+
+    this.searchDebounceId = window.setTimeout(() => {
+      this.loadNews();
+    }, 300);
+  }
+
   protected onPageChange(newPage: number): void {
     this.page.set(newPage);
     this.loadNews();
@@ -105,11 +126,13 @@ export class App implements OnInit, OnDestroy {
     this.loadingNews.set(true);
 
     const previous = this.paginatedNews();
+    const search = this.searchTerm().trim();
     this.newsService
       .getNews({
         sites: slugs,
         page: this.page(),
         pageSize: this.pageSize,
+        search: search === '' ? null : search,
       })
       .subscribe({
         next: (response) => {

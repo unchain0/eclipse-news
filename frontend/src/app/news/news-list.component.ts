@@ -16,17 +16,27 @@ import type { PaginatedNews } from '../core/models/news.model';
           class="rounded-md border border-slate-800 bg-slate-900/60 px-4 py-3"
           [class.animate-news-enter]="isHighlighted(item.id)"
         >
-          <a
-            class="text-sm font-medium text-sky-400 hover:text-sky-300 underline-offset-4 hover:underline"
-            [href]="item.url"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            {{ item.title }}
-          </a>
-          <p class="mt-1 text-xs text-slate-400">
-            {{ item.scraped_at | date : 'short' }}
-          </p>
+          <div class="flex items-start gap-3">
+            <img
+              class="h-5 w-5 rounded-sm shrink-0"
+              [src]="getFaviconUrl(item.url)"
+              [attr.alt]="getFaviconAlt(item.url)"
+              loading="lazy"
+            />
+            <div class="flex-1 min-w-0">
+              <a
+                class="text-sm font-medium text-sky-400 hover:text-sky-300 underline-offset-4 hover:underline"
+                [href]="item.url"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {{ item.title }}
+              </a>
+              <p class="mt-1 text-xs text-slate-400">
+                {{ item.scraped_at | date : 'short' }}
+              </p>
+            </div>
+          </div>
         </li>
         }
       </ul>
@@ -81,6 +91,26 @@ export class NewsListComponent {
 
   protected isHighlighted(id: number): boolean {
     return this.highlightIds().includes(id);
+  }
+
+  protected getFaviconUrl(rawUrl: string): string {
+    try {
+      const url = new URL(rawUrl);
+      const origin = url.origin;
+      const encoded = encodeURIComponent(origin);
+      return `https://www.google.com/s2/favicons?sz=64&domain_url=${encoded}`;
+    } catch {
+      return '';
+    }
+  }
+
+  protected getFaviconAlt(rawUrl: string): string {
+    try {
+      const url = new URL(rawUrl);
+      return `Ícone do site ${url.hostname}`;
+    } catch {
+      return 'Ícone do site';
+    }
   }
 
   protected onPrevious(): void {
