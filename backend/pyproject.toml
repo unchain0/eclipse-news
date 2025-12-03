@@ -29,4 +29,6 @@ dev = [
     "ruff>=0.14.7",
     "types-requests>=2.32.4.20250913",
     "alembic>=1.13.0",
+    "pytest>=9.0.1",
+    "pre-commit>=4.5.0",
 ]
