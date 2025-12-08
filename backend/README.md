@@ -1,6 +1,6 @@
-# Prisma News – Backend
+# Elipse News – Backend
 
-API backend para o projeto **Prisma News**, responsável por:
+API backend para o projeto **Eclipse News**, responsável por:
 
 - Fazer **scraping periódico** de notícias de vários portais.
 - Persistir sites e notícias em **PostgreSQL**.
