@@ -1,46 +1,29 @@
 from __future__ import annotations
 
+from bs4 import Tag
+
 from .base import ScrapedArticle, Scraper
+
+_VALID_CLASSES = [
+    "post__title",
+    "post-multicontent__link--title__text",
+    "post__header__text__title",
+]
 
 
 class GloboScraper(Scraper):
     base_url = "https://www.globo.com/"
     default_tag = "a"
+    min_title_length = 30
 
-    def scrape(self) -> list[ScrapedArticle]:
-        noticias = self.fetch_elements()
-        tg_classes = [
-            "post__title",
-            "post-multicontent__link--title__text",
-            "post__header__text__title",
-        ]
+    def extract_article(self, element: Tag) -> ScrapedArticle | None:
+        if (h2 := element.h2) is None:
+            return None
 
-        articles: list[ScrapedArticle] = []
-        processed_urls: set[str] = set()
+        if (h2_class := h2.get("class")) is None or not any(cls in _VALID_CLASSES for cls in h2_class):
+            return None
 
-        for noticia in noticias:
-            if noticia.h2 is None:
-                continue
+        if not isinstance(url := element.get("href"), str):
+            return None
 
-            if (h2_class := noticia.h2.get("class")) is None:
-                continue
-
-            if not any(class_name in tg_classes for class_name in h2_class):
-                continue
-
-            if not isinstance((url := noticia.get("href")), str):
-                continue
-
-            if url in processed_urls:
-                continue
-
-            if len((title := noticia.h2.get_text().strip())) < 30:
-                continue
-
-            if " " not in title:
-                continue
-
-            articles.append(ScrapedArticle(title=title, url=url))
-            processed_urls.add(url)
-
-        return articles
+        return ScrapedArticle(title=h2.get_text().strip(), url=url)

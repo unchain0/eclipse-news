@@ -11,32 +11,19 @@ class VejaScraper(Scraper):
     base_url = "https://veja.abril.com.br/"
     default_tag = "a"
 
-    def scrape(self) -> list[ScrapedArticle]:
-        noticias = self.fetch_elements()
-        tg_class = "title"
+    def extract_article(self, element: Tag) -> ScrapedArticle | None:
+        if not isinstance(url := element.get("href"), str):
+            return None
 
-        articles: list[ScrapedArticle] = []
-        for noticia in noticias:
-            if not isinstance(noticia, Tag):
+        for heading in [element.h2, element.h3, element.h4]:
+            if heading is None:
                 continue
 
-            title: str | None = None
-            url = noticia.get("href")
+            if (tag_class := heading.get("class")) is None or "title" not in tag_class:
+                continue
 
-            for heading in [noticia.h2, noticia.h3, noticia.h4]:
-                if heading is None:
-                    continue
+            raw_title = heading.get_text().strip()
+            title = re.sub(r"^\d+", "", raw_title).strip()
+            return ScrapedArticle(title=title, url=url)
 
-                tag_class = heading.get("class")
-                if tag_class is None:
-                    continue
-
-                if tg_class in tag_class:
-                    raw_title = heading.get_text().strip()
-                    title = re.sub(r"^\d+", "", raw_title).strip()
-                    break
-
-            if title and isinstance(url, str):
-                articles.append(ScrapedArticle(title=title, url=url))
-
-        return articles
+        return None

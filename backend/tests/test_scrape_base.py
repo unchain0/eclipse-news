@@ -51,6 +51,7 @@ def test_fetch_elements_returns_matching_tags(monkeypatch: pytest.MonkeyPatch) -
 
     elements = fetch_elements("https://example.com", tag="a")
 
+    assert elements is not None
     assert len(elements) == 2
     assert all(el.name == "a" for el in elements)
 
@@ -65,4 +66,4 @@ def test_fetch_elements_handles_request_exception(
 
     elements = fetch_elements("https://example.com", tag="a")
 
-    assert elements == []
+    assert elements is None

@@ -1,38 +1,34 @@
 from __future__ import annotations
 
+from bs4 import Tag
+
 from .base import ScrapedArticle, Scraper
+
+_VALID_CLASSES = [
+    "box-news-list__highlight-subhead",
+    "box-news-list__subhead",
+    "box-queue__subhead",
+]
 
 
 class Poder360Scraper(Scraper):
     base_url = "https://www.poder360.com.br/"
     default_tag = "h2"
+    min_title_length = 30
 
-    def scrape(self) -> list[ScrapedArticle]:
-        noticias_h2 = self.fetch_elements(tag="h2")
-        noticias_h3 = self.fetch_elements(tag="h3")
-        noticias = noticias_h2 + noticias_h3
+    def get_elements(self) -> list[Tag] | None:
+        h2_elements = self.fetch_elements(tag="h2") or []
+        h3_elements = self.fetch_elements(tag="h3") or []
+        return h2_elements + h3_elements or None
 
-        tg_classes = [
-            "box-news-list__highlight-subhead",
-            "box-news-list__subhead",
-            "box-queue__subhead",
-        ]
+    def extract_article(self, element: Tag) -> ScrapedArticle | None:
+        if (link := element.a) is None:
+            return None
 
-        articles: list[ScrapedArticle] = []
-        for noticia in noticias:
-            if noticia.a is None:
-                continue
+        if not (h_class := element.get("class")) or not any(cls in _VALID_CLASSES for cls in h_class):
+            return None
 
-            if not (h_class := noticia.get("class")):
-                continue
+        if not isinstance(url := link.get("href"), str):
+            return None
 
-            if not any(class_name in tg_classes for class_name in h_class):
-                continue
-
-            if len((title := noticia.get_text().strip())) < 30:
-                continue
-
-            if isinstance((url := noticia.a.get("href")), str):
-                articles.append(ScrapedArticle(title=title, url=url))
-
-        return articles
+        return ScrapedArticle(title=element.get_text().strip(), url=url)

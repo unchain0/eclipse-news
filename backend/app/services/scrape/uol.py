@@ -2,60 +2,35 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
+from bs4 import Tag
+
 from .base import ScrapedArticle, Scraper
 
 
 class UOLScraper(Scraper):
     base_url = "https://www.uol.com.br/"
     default_tag = "a"
+    min_title_length = 30
 
-    def scrape(self) -> list[ScrapedArticle]:
-        noticias = self.fetch_elements()
+    def extract_article(self, element: Tag) -> ScrapedArticle | None:
+        if not isinstance(url := element.get("href"), str) or not url.startswith("http"):
+            return None
 
-        articles: list[ScrapedArticle] = []
-        processed_urls: set[str] = set()
+        if "uol.com.br" not in (parsed := urlparse(url)).netloc:
+            return None
 
-        for noticia in noticias:
-            if not isinstance((url := noticia.get("href")), str):
-                continue
+        if len(path_parts := [p for p in parsed.path.split("/") if p]) < 3:
+            return None
 
-            if not url.startswith("http"):
-                continue
+        if not any(len(part) == 4 and part.isdigit() for part in path_parts):
+            return None
 
-            parsed = urlparse(url)
+        if "-" not in path_parts[-1]:
+            return None
 
-            if "uol.com.br" not in parsed.netloc:
-                continue
+        raw_title = element.get_text(separator="\n").strip()
+        lines = [line.strip() for line in raw_title.splitlines() if line.strip()]
+        if not (long_lines := [line for line in lines if len(line) >= 30]):
+            return None
 
-            path_parts = [part for part in parsed.path.split("/") if part]
-            if len(path_parts) < 3:
-                continue
-
-            if not any(len(part) == 4 and part.isdigit() for part in path_parts):
-                continue
-
-            last_segment = path_parts[-1]
-            if "-" not in last_segment:
-                continue
-
-            raw_title = noticia.get_text(separator="\n").strip()
-            lines = [line.strip() for line in raw_title.splitlines() if line.strip()]
-            if not lines:
-                continue
-
-            long_lines = [line for line in lines if len(line) >= 30]
-            if not long_lines:
-                continue
-
-            title = long_lines[-1]
-
-            if " " not in title:
-                continue
-
-            if url in processed_urls:
-                continue
-
-            articles.append(ScrapedArticle(title=title, url=url))
-            processed_urls.add(url)
-
-        return articles
+        return ScrapedArticle(title=long_lines[-1], url=url)

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from app.services.scrape import base as base_module
 from app.services.scrape.globo import GloboScraper
@@ -26,7 +26,7 @@ _HTML_GLOBO_HOME = """
 """
 
 
-def _fake_fetch_elements(url: str, tag: str = "a"):
+def _fake_fetch_elements(url: str, tag: str = "a") -> list[Tag]:
     soup = BeautifulSoup(_HTML_GLOBO_HOME, "html.parser")
     return list(soup.find_all(tag))
 

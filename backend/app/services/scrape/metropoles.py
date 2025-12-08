@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from bs4 import Tag
+
 from .base import ScrapedArticle, Scraper
 
 
@@ -7,39 +9,20 @@ class MetropolesScraper(Scraper):
     base_url = "https://www.metropoles.com/"
     default_tag = "a"
 
-    def scrape(self) -> list[ScrapedArticle]:
-        noticias = self.fetch_elements()
+    def extract_article(self, element: Tag) -> ScrapedArticle | None:
+        if not isinstance(url := element.get("href"), str):
+            return None
 
-        articles: list[ScrapedArticle] = []
-        processed_urls: set[str] = set()
+        if not url.startswith("https://www.metropoles.com"):
+            return None
 
-        for noticia in noticias:
-            if not isinstance((url := noticia.get("href")), str):
-                continue
+        if len(path_parts := url.split("/")[3:]) < 2:
+            return None
 
-            if not url.startswith("https://www.metropoles.com"):
-                continue
+        if "-" not in path_parts[-1]:
+            return None
 
-            parts = url.split("/")
-            path_parts = parts[3:]
-            if len(path_parts) < 2:
-                continue
+        if not (title := element.get_text().strip()):
+            return None
 
-            last_segment = path_parts[-1]
-            if "-" not in last_segment:
-                continue
-
-            raw_title = noticia.get_text().strip()
-            if " " not in raw_title:
-                continue
-
-            if len(raw_title) < 20:
-                continue
-
-            if url in processed_urls:
-                continue
-
-            articles.append(ScrapedArticle(title=raw_title, url=url))
-            processed_urls.add(url)
-
-        return articles
+        return ScrapedArticle(title=title, url=url)

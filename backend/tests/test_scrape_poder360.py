@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from app.services.scrape import base as base_module
 from app.services.scrape.poder360 import Poder360Scraper
@@ -23,7 +23,7 @@ _HTML_PODER360_HOME = """
 """
 
 
-def _fake_fetch_elements(url: str, tag: str = "h2"):
+def _fake_fetch_elements(url: str, tag: str = "h2") -> list[Tag]:
     soup = BeautifulSoup(_HTML_PODER360_HOME, "html.parser")
     return list(soup.find_all(["h2", "h3"]))
 

@@ -1,3 +1,4 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from threading import Thread
 
@@ -10,7 +11,7 @@ from app.services.scraping import Scraping
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     scraping = Scraping(settings.scrape_interval_seconds)
     thread = Thread(
         target=scraping.loop,
