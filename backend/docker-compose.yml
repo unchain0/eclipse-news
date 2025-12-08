@@ -1,11 +1,11 @@
 services:
   db:
     image: postgres:18.1
-    container_name: prisma-news-postgres
+    container_name: eclipse-news-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: prisma_news_dev
+      POSTGRES_DB: eclipse_news_dev
     ports:
       - "5432:5432"
     volumes:

@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 
 def create_app() -> FastAPI:
-    app = FastAPI(title="Prisma News API", lifespan=lifespan)
+    app = FastAPI(title="Eclipse News API", lifespan=lifespan)
 
     if settings.allowed_origins:
         app.add_middleware(
