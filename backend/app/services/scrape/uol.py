@@ -11,9 +11,12 @@ class UOLScraper(Scraper):
     base_url = "https://www.uol.com.br/"
     default_tag = "a"
     min_title_length = 30
+    allowed_domains = ["uol.com.br", "www.uol.com.br"]
 
     def extract_article(self, element: Tag) -> ScrapedArticle | None:
-        if not isinstance(url := element.get("href"), str) or not url.startswith("http"):
+        if not isinstance(url := element.get("href"), str) or not url.startswith(
+            "http"
+        ):
             return None
 
         if "uol.com.br" not in (parsed := urlparse(url)).netloc:

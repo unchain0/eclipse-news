@@ -8,6 +8,7 @@ from .base import ScrapedArticle, Scraper
 class LivecoinsScraper(Scraper):
     base_url = "https://livecoins.com.br/"
     default_tag = "a"
+    allowed_domains = ["livecoins.com.br", "www.livecoins.com.br"]
 
     def extract_article(self, element: Tag) -> ScrapedArticle | None:
         if (rel := element.get("rel")) is None or "bookmark" not in rel:

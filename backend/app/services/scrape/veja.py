@@ -10,6 +10,7 @@ from .base import ScrapedArticle, Scraper
 class VejaScraper(Scraper):
     base_url = "https://veja.abril.com.br/"
     default_tag = "a"
+    allowed_domains = ["veja.abril.com.br", "abril.com.br"]
 
     def extract_article(self, element: Tag) -> ScrapedArticle | None:
         if not isinstance(url := element.get("href"), str):

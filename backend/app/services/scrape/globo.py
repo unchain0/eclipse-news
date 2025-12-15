@@ -15,12 +15,15 @@ class GloboScraper(Scraper):
     base_url = "https://www.globo.com/"
     default_tag = "a"
     min_title_length = 30
+    allowed_domains = ["globo.com", "www.globo.com"]
 
     def extract_article(self, element: Tag) -> ScrapedArticle | None:
         if (h2 := element.h2) is None:
             return None
 
-        if (h2_class := h2.get("class")) is None or not any(cls in _VALID_CLASSES for cls in h2_class):
+        if (h2_class := h2.get("class")) is None or not any(
+            cls in _VALID_CLASSES for cls in h2_class
+        ):
             return None
 
         if not isinstance(url := element.get("href"), str):

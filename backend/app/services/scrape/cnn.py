@@ -12,15 +12,22 @@ _REQUIRED_CLASSES = ["group", "flex", "grow", "shrink-0", "h-auto"]
 class CNNScraper(Scraper):
     base_url = "https://www.cnnbrasil.com.br/"
     default_tag = "figure"
+    allowed_domains = ["cnnbrasil.com.br", "www.cnnbrasil.com.br"]
 
     def extract_article(self, element: Tag) -> ScrapedArticle | None:
-        if not (classes := element.get("class")) or not all(cls in classes for cls in _REQUIRED_CLASSES):
+        if not (classes := element.get("class")) or not all(
+            cls in classes for cls in _REQUIRED_CLASSES
+        ):
             return None
 
-        if (figcaption := element.find("figcaption")) is None or not isinstance(figcaption, Tag):
+        if (figcaption := element.find("figcaption")) is None or not isinstance(
+            figcaption, Tag
+        ):
             return None
 
-        if (link := figcaption.find("a", href=True)) is None or not isinstance(link, Tag):
+        if (link := figcaption.find("a", href=True)) is None or not isinstance(
+            link, Tag
+        ):
             return None
 
         if not isinstance(url := link.get("href"), str):
