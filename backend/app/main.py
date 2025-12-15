@@ -1,25 +1,19 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from threading import Thread
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
 
 from app.config import settings
 from app.routers import api_router
-from app.services.scraping import Scraping
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    scraping = Scraping(settings.scrape_interval_seconds)
-    thread = Thread(
-        target=scraping.loop,
-        daemon=True,
-        name="scraping-loop",
-    )
-    thread.start()
+    logger.info("API server starting - scraping is now a separate process")
     yield
+    logger.info("API server shutting down")
 
 
 def create_app() -> FastAPI:
@@ -33,10 +27,6 @@ def create_app() -> FastAPI:
             allow_methods=["*"],
             allow_headers=["*"],
         )
-
-    @app.get("/health")
-    def health() -> dict[str, str]:
-        return {"status": "ok"}
 
     app.include_router(api_router)
 

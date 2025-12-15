@@ -36,33 +36,57 @@ API backend para o projeto **Eclipse News**, responsável por:
 
 3. Rode as migrações do banco:
 
-   ```bash
-   alembic upgrade head
-   ```
-
-## Executando o backend
-
-Para iniciar o servidor FastAPI com recarregamento automático:
-
 ```bash
-uv run uvicorn app.main:app --reload --reload-dir app --reload-dir migrations
+uv run alembic upgrade head
 ```
 
-Ao subir, o backend:
+### Executando o Scraper
 
-- Inicia uma thread de **scraping em background**, que roda em loop usando o intervalo configurado em `SCRAPE_INTERVAL_SECONDS`.
-- Popula/garante os registros de `sites` e insere novas `news` respeitando a restrição `UNIQUE(site_id, url)` no banco de dados.
+O scraper roda como um processo separado.
+
+#### Execução Direta
+
+```bash
+uv run run_scraper.py --mode continuous
+
+uv run run_scraper.py --mode single
+
+uv run run_scraper.py --mode continuous --interval 120
+```
+
+## Variáveis de Ambiente
+
+### Configuração do Banco
+
+- `DATABASE_URL` - String de conexão PostgreSQL (obrigatório)
+
+### Configuração do Scraping
+
+- `SCRAPE_INTERVAL_SECONDS` - Intervalo entre ciclos de scraping (padrão: 60)
+- `ALLOWED_DOMAINS` - Lista de domínios permitidos para scraping (separados por vírgula)
+- `MAX_RETRIES` - Máximo de tentativas de retry para requisições HTTP (padrão: 3)
+- `RETRY_DELAY_SECONDS` - Delay entre retries (padrão: 1.0)
+- `REQUEST_TIMEOUT_SECONDS` - Timeout de requisições HTTP (padrão: 10)
+
+### Configuração de Busca
+
+- `MAX_SEARCH_RESULTS` - Máximo de resultados de busca para prevenir DoS (padrão: 1000)
+- `SEARCH_QUERY_TIMEOUT_SECONDS` - Timeout de queries de busca no banco (padrão: 5)
+- `MAX_SEARCH_PATTERN_LENGTH` - Tamanho máximo de padrão de busca (padrão: 50)
+
+### Configuração da API
+
+- `ALLOWED_ORIGINS` - Lista de origens permitidas para CORS (separadas por vírgula)
 
 ### Endpoints principais
 
-- `GET /health` – verificação simples de saúde da API.
 - `GET /sites` – lista todos os sites cadastrados (schema `SiteOut`).
 - `GET /news` – lista notícias paginadas, com filtros por site via query params:
   - `sites`: lista de slugs separados por vírgula (ex.: `veja,globo,cnn`).
   - `page`: página (default `1`).
   - `page_size`: tamanho da página (default `20`, máx `100`).
 
-#### Exemplo
+## Exemplo
 
 ```bash
 curl "http://localhost:8000/news?sites=veja,globo&page=1&page_size=3"
