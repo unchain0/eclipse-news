@@ -1,0 +1,9 @@
+@import 'tailwindcss';
+
+:root {
+  font-size: 17px;
+}
+
+body {
+  line-height: 1.6;
+}

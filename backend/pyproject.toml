@@ -1,0 +1,46 @@
+[project]
+name = "eclipse-news"
+version = "0.1.0"
+description = "Extrator de notícias"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4>=4.13.3",
+    "pytimedinput>=2.0.1",
+    "requests>=2.32.3",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "sqlalchemy>=2.0.0",
+    "psycopg2-binary>=2.9.0",
+    "python-dotenv>=1.0.0",
+    "loguru>=0.7.3",
+]
+
+[tool.ruff]
+exclude = ["postgres-data"]
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+exclude = ["postgres-data"]
+plugins = ["pydantic.mypy", "sqlalchemy.ext.mypy.plugin"]
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+warn_untyped_fields = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.19.0",
+    "ruff>=0.14.7",
+    "types-requests>=2.32.4.20250913",
+    "types-beautifulsoup4>=4.12.0.20250516",
+    "alembic>=1.13.0",
+    "pytest>=9.0.1",
+    "pre-commit>=4.5.0",
+]
