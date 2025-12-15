@@ -6,7 +6,6 @@ import type { PaginatedNews } from '../../../model/news.model';
 @Component({
   selector: 'app-news-list',
   templateUrl: './news-list.component.html',
-  styleUrl: './news-list.component.css',
   imports: [DatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

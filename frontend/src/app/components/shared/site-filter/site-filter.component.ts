@@ -5,7 +5,6 @@ import type { Site } from '../../../model/site.model';
 @Component({
   selector: 'app-site-filter',
   templateUrl: './site-filter.component.html',
-  styleUrl: './site-filter.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SiteFilterComponent {
