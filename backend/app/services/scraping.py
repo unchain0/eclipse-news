@@ -36,8 +36,7 @@ class Scraping:
         for slug in SUPPORTED_SITE_SLUGS:
             desired_name = SITE_DISPLAY_NAMES.get(slug, slug.upper())
 
-            site = slug_to_site.get(slug)
-            if site is None:
+            if (site := slug_to_site.get(slug)) is None:
                 site = SiteModel(
                     slug=slug,
                     name=desired_name,
@@ -72,19 +71,6 @@ class Scraping:
                 site_id = slug_to_id.get(slug)
                 if site_id is None:
                     continue
-
-                now = time.time()
-                last_run = self._last_run_per_site.get(slug)
-                if last_run is not None and now - last_run < self.interval_seconds:
-                    remaining = int(self.interval_seconds - (now - last_run))
-                    logger.info(
-                        "Skipping site {slug} due to cooldown ({remaining}s remaining)",
-                        slug=slug,
-                        remaining=remaining,
-                    )
-                    continue
-
-                self._last_run_per_site[slug] = now
 
                 articles = scrape_site(slug)
                 if not articles:
