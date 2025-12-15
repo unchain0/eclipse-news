@@ -218,6 +218,7 @@ def fetch_elements(
         logger.error("URL validation failed: {url}", url=url)
         return None
 
+    response = None
     for attempt in range(settings.max_retries + 1):
         try:
             headers = get_random_headers()
@@ -245,6 +246,9 @@ def fetch_elements(
                 exc=exc,
             )
             time.sleep(delay)
+
+    if response is None:
+        return None
 
     soup = BeautifulSoup(response.text, "html.parser")
     elements = soup.find_all(tag)

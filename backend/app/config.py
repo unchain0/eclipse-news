@@ -1,5 +1,6 @@
 import os
 import re
+from typing import Any
 from urllib.parse import urlparse
 
 from dotenv import load_dotenv
@@ -246,7 +247,7 @@ def get_settings() -> Settings:
     request_settings = _parse_request_settings()
     search_settings = _parse_search_settings()
 
-    all_settings = {
+    all_settings: dict[str, Any] = {
         **database_settings,
         **security_settings,
         **request_settings,

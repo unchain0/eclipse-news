@@ -19,7 +19,8 @@ class UOLScraper(Scraper):
         ):
             return None
 
-        if "uol.com.br" not in (parsed := urlparse(url)).netloc:
+        parsed = urlparse(url)
+        if "uol.com.br" not in parsed.netloc:
             return None
 
         if len(path_parts := [p for p in parsed.path.split("/") if p]) < 3:
