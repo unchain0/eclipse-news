@@ -1,17 +1,9 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
 """
 Standalone scraper process.
 
 This script runs the web scraper as a separate, independent process.
 It can be run manually, via cron job, or by a process manager.
-
-Usage:
-    python run_scraper.py
-
-Environment variables:
-    SCRAPE_INTERVAL_SECONDS: Interval between scraping cycles (default: 60)
-    DATABASE_URL: PostgreSQL connection string
-    ALLOWED_DOMAINS: Comma-separated list of allowed domains
 """
 
 import argparse
