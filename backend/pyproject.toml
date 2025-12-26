@@ -24,7 +24,7 @@ exclude = ["postgres-data"]
 project-includes = ["app", "migrations", "tests"]
 project-excludes = ["postgres-data"]
 
-[tool.pytest.ini_options]
+[tool.pytest]
 testpaths = ["tests"]
 
 [dependency-groups]
@@ -35,5 +35,5 @@ dev = [
     "alembic>=1.13.0",
     "pytest>=9.0.1",
     "pre-commit>=4.5.0",
-    "pyrefly>=0.46.0",
+    "ty>=0.0.7",
 ]
